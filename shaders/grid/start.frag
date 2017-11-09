@@ -30,8 +30,8 @@ float linearAttenuation = 0.05;
 float quadraticAttenuation = 0.01;
 
 //reflektor
-float spotCutOff = 0.9;
-vec3 spotDirection = vec3(1.0, -2.0, 2.0);
+float spotCutOff = 0.999;
+vec3 spotDirection = vec3(-4.5, 3.7, 9.0);
 
 void main() {
 
@@ -49,7 +49,7 @@ void main() {
     vec4 totalDifuse = vec4(0.0);
     vec4 totalSpecular = vec4(0.0);
 
-    float NDotL = max(dot(lghtDrct, nrml), 0.0);
+    float NDotL = dot(lghtDrct, nrml);
 
     if(NDotL > 0.0){
         //skalar soucty
@@ -100,10 +100,13 @@ void main() {
                 break;
                 //reflector
                 case 3:
-                    float spotEffect = max(dot(normalize(spotDirection), normalize(-lghtDrct)),0);
-                    if(spotEffect > (1 - spotCutOff)){
+                    float spotEffect = dot(normalize(spotDirection), normalize(lghtDrct));
+
+                    if(spotEffect > spotCutOff){
+                        float att = 1.0/(constantAttenuation + linearAttenuation * dist + quadraticAttenuation * dist * dist);
                         outColor = totalAmbient + att*(totalDifuse + totalSpecular);
                     }else
+                        //outColor = vec4(vec3(spotEffect),1);
                         outColor = totalAmbient;
                 break;
           }
