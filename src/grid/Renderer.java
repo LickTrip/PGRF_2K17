@@ -4,15 +4,10 @@ import com.jogamp.opengl.GL2GL3;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
 
-import javafx.application.Application;
 import oglutils.*;
 import transforms.*;
 
 import java.awt.event.*;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * GLSL sample:<br/>
@@ -35,24 +30,24 @@ public class Renderer implements GLEventListener, MouseListener,
     OGLBuffers buffers;
     OGLTextRenderer textRenderer;
 
-    int shaderProgram, locProj, locMV, locFunctionType, locEfectType, locDegreeOfEfect, locShowTexture;
+    int shaderProgram, locProj, locMV, locFunctionType, locEfectType, locDegreeOfEfect, locShowTexture, locNormalMapping;
 
     Camera camera = new Camera();
     Mat4 mProj = new Mat4Identity();
 
-    OGLTexture2D texture;
+    OGLTexture2D texture1, texture1Norm, texture1Para;
     OGLTexture2D.Viewer textureViewer;
 
     double camSpeed = 0.35;
     float time = 0;
     //keys
-    boolean line = false, textureSample = false, showTexture = false;
+    boolean line = false, textureSample = false, showTexture = true, normalMapping = false;
 
     int degreeOfEfect = 0,
-            basicTypeCount = 2, lightTypeCount = 3; /*textureTypeCount = 1*/;
+            basicTypeCount = 2, lightTypeCount = 4; /*textureTypeCount = 1*/;
 
-    int functionTypeCount = 3,
-            functionType = 0;
+    int functionTypeCount = 5,
+            functionType = 4;
 
     int efectTypeCount = 1,
             efectType = efectTypeCount;
@@ -73,7 +68,7 @@ public class Renderer implements GLEventListener, MouseListener,
         //maping shaders//
         shaderProgram = ShaderUtils.loadProgram(gl, "/grid/start");
         //create buffer
-        buffers = Factory.gridGenerate(gl, 60, 60);
+        buffers = Factory.gridGenerate(gl, 160, 160);
 
         locMV = gl.glGetUniformLocation(shaderProgram, "mMV");
         locProj = gl.glGetUniformLocation(shaderProgram, "mProj");
@@ -81,9 +76,11 @@ public class Renderer implements GLEventListener, MouseListener,
         locEfectType = gl.glGetUniformLocation(shaderProgram, "efectType");
         locDegreeOfEfect = gl.glGetUniformLocation(shaderProgram, "degreeOfEfect");
         locShowTexture = gl.glGetUniformLocation(shaderProgram, "showTexture");
+        locNormalMapping = gl.glGetUniformLocation(shaderProgram, "normalMap");
 
-        //"/textures/mosaic.jpg"
-        texture = new OGLTexture2D(gl, "/textures/hypno.jpg");
+        texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
+        texture1Norm = new OGLTexture2D(gl, "/textures/bricksn.png");
+        texture1Para = new OGLTexture2D(gl, "/textures/bricksh.png");
 
         setMyCamera();
 
@@ -117,8 +114,12 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform1i(locEfectType, efectType);
         gl.glUniform1i(locDegreeOfEfect, degreeOfEfect);
         gl.glUniform1i(locShowTexture, Factory.convertMyBool(showTexture));
+        gl.glUniform1i(locNormalMapping, Factory.convertMyBool(normalMapping));
 
-        texture.bind(shaderProgram, "textureID", 0);
+        texture1.bind(shaderProgram, "texture1", 0);
+        texture1Norm.bind(shaderProgram, "texture1Norm", 1);
+        texture1Para.bind(shaderProgram, "texture1Para", 2);
+
 
         //time += 0.1;
         //gl.glUniform1f(locCamera, time); // correct shader must be set before this
@@ -131,8 +132,13 @@ public class Renderer implements GLEventListener, MouseListener,
         // bind and draw - prvni parametr - interpretace objektu, druha - shader program
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
 
-        if (textureSample)
-            textureViewer.view(texture, 0.5, 0.5, 0.5);
+        if (textureSample){
+            textureViewer.view(texture1, 0.5, 0.5, 0.5);
+            textureViewer.view(texture1Norm, 0.5, 0.0, 0.5);
+            textureViewer.view(texture1Para, 0.5, -0.5, 0.5);
+        }
+
+
 
         //vrcholy u bean, slonní hlava, normála - upraveno, proc dela bordel pri oddaleni, nefunguje reflektor
 
@@ -283,13 +289,17 @@ public class Renderer implements GLEventListener, MouseListener,
                     functionType = functionTypeCount;
                 break;
             case KeyEvent.VK_C:
-                if(showTexture)
-                    textureSample = !textureSample;
+                textureSample = !textureSample;
                 break;
             case KeyEvent.VK_T:
                 showTexture = !showTexture;
                 if(!showTexture)
                     textureSample = false;
+                break;
+            case KeyEvent.VK_P:
+                normalMapping = !normalMapping;
+                if(!normalMapping)
+                    normalMapping = false;
                 break;
             case KeyEvent.VK_ESCAPE:
                 System.exit(0);

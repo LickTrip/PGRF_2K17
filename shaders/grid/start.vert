@@ -17,7 +17,7 @@ uniform mat4 mProj;
 uniform int functionType;
 
 //const
-const float PI = 3.14159265359;
+const float PI = 3.1415926;
 const vec3 lightSource = vec3(-3.5, 3.0, 3.0);
 
 //functions
@@ -27,11 +27,12 @@ vec3 doFunctionEle(vec2 uv);
 vec3 doFunctionTimer(vec2 uv);
 vec3 doFunctionTimer2(vec2 uv);
 vec3 doFunctionBean(vec2 uv);
+vec3 doFunctionGlobe(vec2 uv);
+vec3 doFunctionCarpet(vec2 uv);
 
 
 void main() {
     vec4 positionMV = mMV * vec4(doMyFunctions(inPosition), 1);
-	//normal = mat3(mMV) * doNormal(inPosition);
 	normal = inverse(transpose(mat3(mMV))) * doNormal(inPosition);
 	lightDirection = lightSource - positionMV.xyz;
 	viewDirection = - positionMV.xyz;
@@ -61,6 +62,10 @@ vec3 doMyFunctions(vec2 uv){
         return doFunctionTimer2(uv);
     case 3:
         return doFunctionEle(uv);
+    case 4:
+        return doFunctionGlobe(uv);
+    case 5:
+        return doFunctionCarpet(uv);
     }
     return doFunctionBean(uv);
 }
@@ -121,6 +126,31 @@ vec3 doFunctionBean(vec2 uv){
 	position.x = sin(r) * cos(az);
 	position.y = 2*sin(r) * sin(az);
 	position.z = cos(r);
+
+	return position;
+}
+
+vec3 doFunctionGlobe(vec2 uv){
+    vec3 position;
+
+	//od 0 do pi t
+	float zen = uv.x * PI;
+	//od 0 do 2pi s
+	float az = uv.y * 2.0 * PI;
+	float r = zen;
+
+	position.x = sin(r) * cos(az);
+	position.y = sin(r) * sin(az);
+	position.z = cos(r);
+
+	return position;
+}
+
+vec3 doFunctionCarpet(vec2 uv){
+    vec3 position;
+
+	position.xy = (inPosition - 0.57) * 2.8;
+	position.z = (4.5 * (cos(sqrt(8 * (inPosition.x * inPosition.x)+ 3 * (inPosition.y *  inPosition.y)+5))-0.5))+6;
 
 	return position;
 }
