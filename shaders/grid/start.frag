@@ -14,6 +14,7 @@ uniform sampler2D texture1Norm;
 uniform sampler2D texture1Para;
 uniform int showTexture;
 uniform int normalMap;
+uniform int functionType;
 
 out vec4 outColor; // output from the fragment shader
 
@@ -57,7 +58,7 @@ void main() {
          float heightText = texture(texture1Para, texCoord).r;
          float v = heightText * scaleL + scaleK;
          vec2 offSet = viewDrct.xy / viewDrct.z * v;
-
+         //prepocet souradnic na <-1;1>
          bump = texture(texture1Norm, texCoord + offSet).rgb * 2.0 - 1.0;
     }
 

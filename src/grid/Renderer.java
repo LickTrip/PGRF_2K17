@@ -9,6 +9,8 @@ import transforms.*;
 
 import java.awt.event.*;
 
+import static com.jogamp.opengl.GL.GL_UNPACK_ALIGNMENT;
+
 /**
  * GLSL sample:<br/>
  * Read and compile shader from files "/shader/glsl01/start.*" using ShaderUtils
@@ -46,8 +48,8 @@ public class Renderer implements GLEventListener, MouseListener,
     int degreeOfEfect = 0,
             basicTypeCount = 2, lightTypeCount = 4; /*textureTypeCount = 1*/;
 
-    int functionTypeCount = 5,
-            functionType = 4;
+    int functionTypeCount = 6,
+            functionType = 0;
 
     int efectTypeCount = 1,
             efectType = efectTypeCount;
@@ -78,9 +80,13 @@ public class Renderer implements GLEventListener, MouseListener,
         locShowTexture = gl.glGetUniformLocation(shaderProgram, "showTexture");
         locNormalMapping = gl.glGetUniformLocation(shaderProgram, "normalMap");
 
-        texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
-        texture1Norm = new OGLTexture2D(gl, "/textures/bricksn.png");
-        texture1Para = new OGLTexture2D(gl, "/textures/bricksh.png");
+//        texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
+//        texture1Norm = new OGLTexture2D(gl, "/textures/bricksn.png");
+//        texture1Para = new OGLTexture2D(gl, "/textures/bricksh.png");
+        gl.glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+        texture1 = new OGLTexture2D(gl, "/textures/eye_color.jpg");
+        texture1Norm = new OGLTexture2D(gl, "/textures/eye_normal.png");
+        texture1Para = new OGLTexture2D(gl, "/textures/eye_height.png");
 
         setMyCamera();
 
@@ -118,11 +124,6 @@ public class Renderer implements GLEventListener, MouseListener,
 
         texture1.bind(shaderProgram, "texture1", 0);
         texture1Norm.bind(shaderProgram, "texture1Norm", 1);
-        texture1Para.bind(shaderProgram, "texture1Para", 2);
-
-
-        //time += 0.1;
-        //gl.glUniform1f(locCamera, time); // correct shader must be set before this
         if (line)
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
         else
