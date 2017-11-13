@@ -15,6 +15,8 @@ varying vec2 texCoord;
 uniform mat4 mMV;
 uniform mat4 mProj;
 uniform int functionType;
+uniform int repeatTextW;
+uniform int repeatTextH;
 
 //const
 const float PI = 3.1415926;
@@ -41,12 +43,15 @@ void main() {
 	viewDirection = - positionMV.xyz;
 	dist = length(lightDirection);
 
+    vec2 coord;
     if(functionType == 0 || functionType == 1){
-        vec2 shereText = vec2((atan(funcPos.y, funcPos.x) / PI + 1.0), 1.0 - acos(funcPos.z) / PI);
-        texCoord = shereText;
+        vec2 shereText = vec2((atan(funcPos.y, funcPos.x) / PI + 1.0)*0.5, 1.0 - acos(funcPos.z) / PI);
+        coord = mod(shereText * vec2(repeatTextW, repeatTextH), vec2(1.0, 1.0));
+        texCoord = coord;
     }
     else{
-	    texCoord = inPosition;
+         coord = mod(inPosition * vec2(repeatTextW, repeatTextH), vec2(1.0, 1.0));
+         texCoord = coord;
 	}
 
 	gl_Position = mProj * mMV * vec4(doMyFunctions(inPosition), 1);

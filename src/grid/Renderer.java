@@ -32,27 +32,33 @@ public class Renderer implements GLEventListener, MouseListener,
     OGLBuffers buffers;
     OGLTextRenderer textRenderer;
 
-    int shaderProgram, locProj, locMV, locFunctionType, locEfectType, locDegreeOfEfect, locShowTexture, locNormalMapping;
+    int shaderProgram, locProj, locMV, locFunctionType, locEfectType,
+            locDegreeOfEfect, locShowTexture, locNormalMapping, locRepeatTextW, locRepeatTextH, locChangeText;
 
     Camera camera = new Camera();
     Mat4 mProj = new Mat4Identity();
 
-    OGLTexture2D texture1, texture1Norm, texture1Para;
+    OGLTexture2D texture1, texture1Norm, texture1Para, texture2, texture2Norm, texture2Para, texture2Ao;
     OGLTexture2D.Viewer textureViewer;
 
     double camSpeed = 0.35;
     float time = 0;
     //keys
-    boolean line = false, textureSample = false, showTexture = true, normalMapping = false;
+    boolean line = false, textureSample = false, showTexture = true, normalMapping = true;
+
+    int repeatTextW = 2, repeatTextH = 1;
 
     int degreeOfEfect = 0,
-            basicTypeCount = 2, lightTypeCount = 4; /*textureTypeCount = 1*/;
+            basicTypeCount = 2, lightTypeCount = 4; /*textureTypeCount = 1*/
+    ;
 
     int functionTypeCount = 6,
             functionType = 0;
 
     int efectTypeCount = 1,
             efectType = efectTypeCount;
+
+    int changeText = 0;
 
     @Override
     public void init(GLAutoDrawable glDrawable) {
@@ -79,21 +85,30 @@ public class Renderer implements GLEventListener, MouseListener,
         locDegreeOfEfect = gl.glGetUniformLocation(shaderProgram, "degreeOfEfect");
         locShowTexture = gl.glGetUniformLocation(shaderProgram, "showTexture");
         locNormalMapping = gl.glGetUniformLocation(shaderProgram, "normalMap");
+        locRepeatTextW = gl.glGetUniformLocation(shaderProgram, "repeatTextW");
+        locRepeatTextH = gl.glGetUniformLocation(shaderProgram, "repeatTextH");
+        locChangeText = gl.glGetUniformLocation(shaderProgram, "changeText");
 
-//        texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
-//        texture1Norm = new OGLTexture2D(gl, "/textures/bricksn.png");
-//        texture1Para = new OGLTexture2D(gl, "/textures/bricksh.png");
-        gl.glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-        texture1 = new OGLTexture2D(gl, "/textures/eye_color.jpg");
-        texture1Norm = new OGLTexture2D(gl, "/textures/eye_normal.png");
-        texture1Para = new OGLTexture2D(gl, "/textures/eye_height.png");
+
+        texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
+        texture1Norm = new OGLTexture2D(gl, "/textures/bricksn.png");
+        texture1Para = new OGLTexture2D(gl, "/textures/bricksh.png");
+
+        texture2 = new OGLTexture2D(gl, "/textures/eye_color.jpg");
+        texture2Norm = new OGLTexture2D(gl, "/textures/eye_normal.png");
+        texture2Para = new OGLTexture2D(gl, "/textures/eye_height.png");
+        texture2Ao = new OGLTexture2D(gl, "/textures/eye_ao.png");
+        //gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
+        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
+
 
         setMyCamera();
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
-
+    //TODO blending, paralax, normal + nrml, gloss, carpet
     private void setMyCamera() {
 //        camera = camera.withPosition(new Vec3D(5, 5, 2.5))
 //                .withAzimuth(Math.PI * 1.25)
@@ -121,9 +136,18 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform1i(locDegreeOfEfect, degreeOfEfect);
         gl.glUniform1i(locShowTexture, Factory.convertMyBool(showTexture));
         gl.glUniform1i(locNormalMapping, Factory.convertMyBool(normalMapping));
+        gl.glUniform1i(locRepeatTextW, repeatTextW);
+        gl.glUniform1i(locRepeatTextH, repeatTextH);
+        gl.glUniform1i(locChangeText, changeText);
+
 
         texture1.bind(shaderProgram, "texture1", 0);
         texture1Norm.bind(shaderProgram, "texture1Norm", 1);
+        texture1Para.bind(shaderProgram, "texture1Para", 2);
+        texture2.bind(shaderProgram, "texture2", 3);
+        texture2Norm.bind(shaderProgram, "texture2Norm", 4);
+        texture2Para.bind(shaderProgram, "texture2Para", 5);
+        texture2Ao.bind(shaderProgram, "texture2Ao", 6);
         if (line)
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
         else
@@ -133,12 +157,11 @@ public class Renderer implements GLEventListener, MouseListener,
         // bind and draw - prvni parametr - interpretace objektu, druha - shader program
         buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
 
-        if (textureSample){
+        if (textureSample) {
             textureViewer.view(texture1, 0.5, 0.5, 0.5);
             textureViewer.view(texture1Norm, 0.5, 0.0, 0.5);
             textureViewer.view(texture1Para, 0.5, -0.5, 0.5);
         }
-
 
 
         //vrcholy u bean, slonní hlava, normála - upraveno, proc dela bordel pri oddaleni, nefunguje reflektor
@@ -146,6 +169,8 @@ public class Renderer implements GLEventListener, MouseListener,
         //pospisky
         String text = new String(this.getClass().getName());
         textRenderer.drawStr2D(3, height - 20, text);
+        textRenderer.drawStr2D(width - 60,  height - 20, "Text-W: " + Integer.toString(repeatTextW));
+        textRenderer.drawStr2D(width - 60, height - 40, "Text-H: " + Integer.toString(repeatTextH));
         textRenderer.drawStr2D(width - 40, 3, "Michal");
         textRenderer.drawStr2D(3, 54, "Texture: " + Boolean.toString(showTexture));
         textRenderer.drawStr2D(3, 37, "Type of function: " + Integer.toString(functionType));
@@ -294,13 +319,39 @@ public class Renderer implements GLEventListener, MouseListener,
                 break;
             case KeyEvent.VK_T:
                 showTexture = !showTexture;
-                if(!showTexture)
+                if (!showTexture)
                     textureSample = false;
                 break;
             case KeyEvent.VK_P:
                 normalMapping = !normalMapping;
-                if(!normalMapping)
+                if (!normalMapping)
                     normalMapping = false;
+                break;
+            case KeyEvent.VK_NUMPAD4:
+                if(repeatTextW > 1)
+                    repeatTextW -= 1;
+                break;
+            case KeyEvent.VK_NUMPAD6:
+                if(repeatTextW < 10)
+                    repeatTextW += 1;
+                break;
+            case KeyEvent.VK_NUMPAD8:
+                if(repeatTextH < 10)
+                    repeatTextH += 1;
+                break;
+            case KeyEvent.VK_NUMPAD2:
+                if(repeatTextH > 1)
+                    repeatTextH -= 1;
+                break;
+            case KeyEvent.VK_NUMPAD5:
+                repeatTextH = 1;
+                repeatTextW = 1;
+                break;
+            case KeyEvent.VK_NUMPAD0:
+                if (changeText == 0)
+                    changeText = 1;
+                else
+                    changeText = 0;
                 break;
             case KeyEvent.VK_ESCAPE:
                 System.exit(0);

@@ -12,9 +12,16 @@ uniform int degreeOfEfect;
 uniform sampler2D texture1;
 uniform sampler2D texture1Norm;
 uniform sampler2D texture1Para;
+
+uniform sampler2D texture2;
+uniform sampler2D texture2Norm;
+uniform sampler2D texture2Para;
+uniform sampler2D texture2Ao;
+
 uniform int showTexture;
 uniform int normalMap;
 uniform int functionType;
+uniform int changeText;
 
 out vec4 outColor; // output from the fragment shader
 
@@ -49,17 +56,35 @@ void main() {
     vec3 viewDrct = normalize(viewDirection);
 
     vec3 bump;
+    vec3 glossColor;
+    float reflectivity;
     if(showTexture == 1){
-         baseColor = texture(texture1, texCoord);
-
+         float heightText;
+         if(changeText == 0){
+             //base
+             baseColor = texture(texture1, texCoord);
+             //height mapp
+             heightText = texture(texture1Para, texCoord).r;
+         }
+         else{
+            //base
+            baseColor = texture(texture2, texCoord);
+            //height
+            heightText = texture(texture2Para, texCoord).r;
+            //gloss
+            glossColor = texture(texture2Ao, texCoord * vec2(2.0,1.0)).rgb;
+            reflectivity = 0.30*glossColor.r + 0.59*glossColor.g + 0.11*glossColor.b;
+         }
          if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
          discard;
 
-         float heightText = texture(texture1Para, texCoord).r;
          float v = heightText * scaleL + scaleK;
          vec2 offSet = viewDrct.xy / viewDrct.z * v;
          //prepocet souradnic na <-1;1>
-         bump = texture(texture1Norm, texCoord + offSet).rgb * 2.0 - 1.0;
+         if(changeText == 0)
+            bump = texture(texture1Norm, texCoord + offSet).rgb * 2.0 - 1.0;
+         else
+            bump = texture(texture2Norm, texCoord + offSet).rgb * 2.0 - 1.0;
     }
 
     vec4 color = baseColor;
@@ -93,7 +118,7 @@ void main() {
         }
         else{
             if(normalMap == 1)
-                NDotH = max(0.0, dot(nrml * bump, halfVector));
+                NDotH = max(0.0, dot(bump * nrml, halfVector));
             else
                 NDotH = max(0.0, dot(bump, halfVector));
         }
@@ -139,7 +164,7 @@ void main() {
                     if(showTexture == 0)
                         outColor = totalAmbient + att*(totalDifuse + totalSpecular);
                     else
-                        outColor = totalAmbient + att*(totalDifuse + totalSpecular);
+                        outColor = reflectivity * totalAmbient + att*(totalDifuse + totalSpecular);
                 break;
                 //reflector
                 case 3:
