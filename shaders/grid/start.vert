@@ -14,17 +14,19 @@ varying vec2 texCoord;
 //uniform float time; // variable constant for all vertices in a single draw
 uniform mat4 mMV;
 uniform mat4 mProj;
+uniform vec3 camera;
 uniform int functionType;
 uniform int repeatTextW;
 uniform int repeatTextH;
 
 //const
 const float PI = 3.1415926;
-const vec3 lightSource = vec3(-3.5, 3.0, 3.0);
+const float delta = 0.001;
 
 //functions
-vec3 doMyFunctions(vec2 uv);
 vec3 doNormal(vec2 uv);
+vec3 calcTangent(vec2 uv);
+vec3 doMyFunctions(vec2 uv);
 vec3 doFunctionEle(vec2 uv);
 vec3 doFunctionDonut(vec2 uv);
 vec3 doFunctionThing(vec2 uv);
@@ -33,15 +35,27 @@ vec3 doFunctionGlobe(vec2 uv);
 vec3 doFunctionCarpet(vec2 uv);
 vec3 doFunctionSombrero(vec2 uv);
 vec3 doFunctionVase(vec2 uv);
+vec3 doFunctionGrid(vec2 uv);
 
 
 void main() {
     vec3 funcPos = doMyFunctions(inPosition);
     vec4 positionMV = mMV * vec4(funcPos, 1);
 	normal = inverse(transpose(mat3(mMV))) * doNormal(inPosition);
-	lightDirection = lightSource - positionMV.xyz;
-	viewDirection = - positionMV.xyz;
-	dist = length(lightDirection);
+	//vec3 lightSource = vec3(-3.5, 3.0, 3.0);
+	lightDirection = camera - funcPos.xyz;
+	viewDirection = - normalize(positionMV.xyz);
+	dist = length(funcPos.xyz - camera);
+	vec3 vTangent = calcTangent(inPosition);
+
+	//transformace do TP
+	normal = normalize(normal);
+	vTangent = mat3(mMV) * vTangent;
+	vec3 vBinormal = cross(normalize(normal), normalize(vTangent));
+	vTangent = cross(vBinormal, normal);
+	mat3 TBN = mat3(vTangent, vBinormal, normal);
+	viewDirection = viewDirection * TBN;
+	lightDirection = lightDirection * TBN;
 
     vec2 coord;
     if(functionType == 0 || functionType == 1){
@@ -59,11 +73,15 @@ void main() {
 
 //normala pro stinovani barvy
 vec3 doNormal(vec2 uv){
-	const float delta = 0.001;
 	vec3 du = doMyFunctions(vec2(uv.x + delta, uv.y)) - doMyFunctions(vec2(uv.x - delta, uv.y));
 	vec3 dv = doMyFunctions(vec2(uv.x, uv.y + delta)) - doMyFunctions(vec2(uv.x, uv.y - delta));
 
 	return normalize(cross(du,dv)); //normalizovat aby byla videt barva
+}
+
+vec3 calcTangent(vec2 uv){
+    vec3 du = doMyFunctions(vec2(uv.x + delta, uv.y)) - doMyFunctions(vec2(uv.x - delta, uv.y));
+    return du;
 }
 
 vec3 doMyFunctions(vec2 uv){
@@ -73,7 +91,7 @@ vec3 doMyFunctions(vec2 uv){
     case 1:
         return doFunctionDonut(uv);
     case 2:
-        return doFunctionCarpet(uv);
+        return doFunctionGrid(uv);
     case 3:
         return doFunctionEle(uv);
     case 4:
@@ -116,7 +134,7 @@ vec3 doFunctionDonut(vec2 uv){
 
 vec3 doFunctionCarpet(vec2 uv){
     vec3 position;
-    vec2 myPosition = inPosition.xy;
+    vec2 myPosition = uv.xy;
 
 	position.x = (myPosition.x - 0.57) * 2.8;
 	position.y = (myPosition.y - 0.57) * 2.8;
@@ -190,6 +208,17 @@ vec3 doFunctionBean(vec2 uv){
 	position.x = sin(zen) * cos(az);
 	position.y = 2*sin(zen) * sin(az);
 	position.z = cos(zen);
+
+	return position;
+}
+
+vec3 doFunctionGrid(vec2 uv){
+    vec3 position;
+    vec2 myPosition = uv.xy;
+
+	position.x = (myPosition.x - 0.57) * 2.8;
+	position.y = (myPosition.y - 0.57) * 2.8;
+	position.z = 1;
 
 	return position;
 }

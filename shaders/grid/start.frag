@@ -6,6 +6,7 @@ varying vec3 viewDirection;
 varying float dist;
 
 varying vec2 texCoord;
+uniform vec3 camera;
 
 uniform int efectType;
 uniform int degreeOfEfect;
@@ -23,6 +24,10 @@ uniform int normalMap;
 uniform int functionType;
 uniform int changeText;
 
+//paralax
+uniform float scaleL;
+uniform float scaleK;
+
 out vec4 outColor; // output from the fragment shader
 
 //osvetleni
@@ -37,16 +42,12 @@ float specularPower = 6.0;
 //utlum
 //konstatni osvetleni cim mensi tim vetsi osvetleni
 float constantAttenuation = 0.05;
-float linearAttenuation = 0.05;
+float linearAttenuation = 0.10; //0.05
 float quadraticAttenuation = 0.01;
 
 //reflektor
-float spotCutOff = 0.999;
-vec3 spotDirection = vec3(-4.5, 3.7, 9.0);
-
-//paralex mapping
-float scaleL = 0.02;
-float scaleK = 0.0;
+float spotCutOff = 0.99;
+vec3 spotDirection = vec3(-4, -9, 13.0);
 
 void main() {
 
@@ -58,6 +59,7 @@ void main() {
     vec3 bump;
     vec3 glossColor;
     float reflectivity;
+
     if(showTexture == 1){
          float heightText;
          if(changeText == 0){
@@ -75,19 +77,22 @@ void main() {
             glossColor = texture(texture2Ao, texCoord * vec2(2.0,1.0)).rgb;
             reflectivity = 0.30*glossColor.r + 0.59*glossColor.g + 0.11*glossColor.b;
          }
-         if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
-         discard;
 
+         //vypocet paralax
          float v = heightText * scaleL + scaleK;
-         vec2 offSet = viewDrct.xy / viewDrct.z * v;
+         vec3 eye = normalize(camera);
+         vec2 offSet = eye.xy * v;
+
+         //orezani paralax
+         if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+            discard;
+
          //prepocet souradnic na <-1;1>
          if(changeText == 0)
             bump = texture(texture1Norm, texCoord + offSet).rgb * 2.0 - 1.0;
          else
             bump = texture(texture2Norm, texCoord + offSet).rgb * 2.0 - 1.0;
     }
-
-    vec4 color = baseColor;
 
     //nastaveni slozek
     vec4 totalAmbient = ambient * baseColor;
@@ -164,12 +169,13 @@ void main() {
                     if(showTexture == 0)
                         outColor = totalAmbient + att*(totalDifuse + totalSpecular);
                     else
-                        outColor = reflectivity * totalAmbient + att*(totalDifuse + totalSpecular);
+                        outColor = totalAmbient + att*(totalDifuse + totalSpecular)*0.4;
                 break;
                 //reflector
                 case 3:
                     if(spotEffect > spotCutOff){
-                        outColor = totalAmbient + att*(totalDifuse + totalSpecular);
+                        //outColor = totalAmbient + att*(totalDifuse + totalSpecular);
+                        outColor = vec4(vec3(spotEffect),1);
                     }else
                         //outColor = vec4(vec3(spotEffect),1);
                         outColor = totalAmbient;

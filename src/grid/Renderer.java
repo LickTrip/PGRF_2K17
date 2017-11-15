@@ -33,7 +33,8 @@ public class Renderer implements GLEventListener, MouseListener,
     OGLTextRenderer textRenderer;
 
     int shaderProgram, locProj, locMV, locFunctionType, locEfectType,
-            locDegreeOfEfect, locShowTexture, locNormalMapping, locRepeatTextW, locRepeatTextH, locChangeText;
+            locDegreeOfEfect, locShowTexture, locNormalMapping, locRepeatTextW, locRepeatTextH, locChangeText,
+            locCamera, locScaleL, locScaleK;
 
     Camera camera = new Camera();
     Mat4 mProj = new Mat4Identity();
@@ -44,9 +45,9 @@ public class Renderer implements GLEventListener, MouseListener,
     double camSpeed = 0.35;
     float time = 0;
     //keys
-    boolean line = false, textureSample = false, showTexture = true, normalMapping = true;
+    boolean line = false, textureSample = false, showTexture = false, normalMapping = false;
 
-    int repeatTextW = 2, repeatTextH = 1;
+    int repeatTextW = 1, repeatTextH = 1;
 
     int degreeOfEfect = 0,
             basicTypeCount = 2, lightTypeCount = 4; /*textureTypeCount = 1*/
@@ -59,6 +60,8 @@ public class Renderer implements GLEventListener, MouseListener,
             efectType = efectTypeCount;
 
     int changeText = 0;
+
+    float scaleL = 0.02f, scaleK = 0.01f;
 
     @Override
     public void init(GLAutoDrawable glDrawable) {
@@ -88,6 +91,9 @@ public class Renderer implements GLEventListener, MouseListener,
         locRepeatTextW = gl.glGetUniformLocation(shaderProgram, "repeatTextW");
         locRepeatTextH = gl.glGetUniformLocation(shaderProgram, "repeatTextH");
         locChangeText = gl.glGetUniformLocation(shaderProgram, "changeText");
+        locCamera = gl.glGetUniformLocation(shaderProgram, "camera");
+        locScaleL = gl.glGetUniformLocation(shaderProgram, "scaleL");
+        locScaleK = gl.glGetUniformLocation(shaderProgram, "scaleK");
 
 
         texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
@@ -99,8 +105,8 @@ public class Renderer implements GLEventListener, MouseListener,
         texture2Para = new OGLTexture2D(gl, "/textures/eye_height.png");
         texture2Ao = new OGLTexture2D(gl, "/textures/eye_ao.png");
         //gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
-        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
+        //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
+        //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
 
 
         setMyCamera();
@@ -108,7 +114,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
-    //TODO blending, paralax, normal + nrml, gloss, carpet
+    //TODO blending
     private void setMyCamera() {
 //        camera = camera.withPosition(new Vec3D(5, 5, 2.5))
 //                .withAzimuth(Math.PI * 1.25)
@@ -139,6 +145,9 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform1i(locRepeatTextW, repeatTextW);
         gl.glUniform1i(locRepeatTextH, repeatTextH);
         gl.glUniform1i(locChangeText, changeText);
+        gl.glUniform3f(locCamera,(float) camera.getPosition().getX(),(float) camera.getPosition().getY(),(float) camera.getPosition().getZ());
+        gl.glUniform1f(locScaleL, scaleL);
+        gl.glUniform1f(locScaleK, scaleK);
 
 
         texture1.bind(shaderProgram, "texture1", 0);
@@ -238,6 +247,8 @@ public class Renderer implements GLEventListener, MouseListener,
                 break;
             case KeyEvent.VK_ALT:
                 setMyCamera();
+                scaleL = 0.02f;
+                scaleK = 0.01f;
                 break;
             case KeyEvent.VK_CONTROL:
                 camera = camera.down(1);
@@ -326,6 +337,14 @@ public class Renderer implements GLEventListener, MouseListener,
                 normalMapping = !normalMapping;
                 if (!normalMapping)
                     normalMapping = false;
+                break;
+            case KeyEvent.VK_L:
+                if(scaleL < 1.00f)
+                    scaleL += 0.01f;
+                break;
+            case KeyEvent.VK_K:
+                if(scaleK < 1.00f)
+                    scaleK += 0.01f;
                 break;
             case KeyEvent.VK_NUMPAD4:
                 if(repeatTextW > 1)
