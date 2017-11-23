@@ -9,10 +9,23 @@ varying vec2 texCoord;
 varying vec3 spotDirection;
 varying vec2 sphereText;
 
+varying vec4 myColor;
+varying vec4 ambient;
+varying vec4 diffuse;
+varying vec4 specular;
+
+varying float constantAttenuation;
+varying float linearAttenuation;
+varying float quadraticAttenuation;
+
+varying float specularPower;
+
 uniform vec3 camera;
+uniform int isPerVert;
 
 uniform int efectType;
 uniform int degreeOfEfect;
+
 uniform sampler2D texture1;
 uniform sampler2D texture1Norm;
 uniform sampler2D texture1Para;
@@ -34,28 +47,28 @@ uniform int changeText;
 uniform float scaleL;
 uniform float scaleK;
 
+varying vec4 vertColor;
 out vec4 outColor; // output from the fragment shader
 
-//osvetleni
-vec4 baseColor = vec4(1.0, 0.2, 0.0, 1.0);
-vec4 ambient = vec4(0.05);
-vec4 diffuse = vec4(0.80);
-vec4 specular = vec4(0.90);
-
-//cim ss cislo tim vetsi radius
-float specularPower = 6.0;
-
-//utlum
-//konstatni osvetleni cim mensi tim vetsi osvetleni
-float constantAttenuation = 0.05;
-float linearAttenuation = 0.10; //0.05
-float quadraticAttenuation = 0.01;
+vec4 baseColor;
 
 //reflektor
 float spotCutOff = 0.99;
 
+void perPixel();
+
 void main() {
 
+    if(isPerVert == 0){
+        baseColor = myColor;
+        perPixel();
+    }
+    else{
+        outColor = vertColor;
+    }
+}
+
+void perPixel(){
     //normalizace
     vec3 lghtDrct = normalize(lightDirection);
     vec3 nrml = normalize(normal);
@@ -203,4 +216,5 @@ void main() {
           }
         break;
     }
-} 
+
+}

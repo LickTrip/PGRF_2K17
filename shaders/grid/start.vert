@@ -1,8 +1,5 @@
 #version 150
 in vec2 inPosition; // input from the vertex buffer
-//in vec2 inTextureCoordinates;
-//in vec3 inColor; // input from the vertex buffer
-//out vec3 vertColor; // output from this shader to the next pipeline stage
 
 varying vec3 normal;
 varying vec3 lightDirection;
@@ -13,6 +10,18 @@ varying vec2 texCoord;
 varying vec2 sphereText;
 varying vec3 spotDirection;
 
+varying vec4 myColor;
+varying vec4 ambient;
+varying vec4 diffuse;
+varying vec4 specular;
+
+varying float constantAttenuation;
+varying float linearAttenuation;
+varying float quadraticAttenuation;
+
+varying float specularPower;
+
+varying vec4 vertColor;
 //uniform float time; // variable constant for all vertices in a single draw
 uniform mat4 mMV;
 uniform mat4 mProj;
@@ -20,10 +29,13 @@ uniform vec3 camera;
 uniform int functionType;
 uniform int repeatTextW;
 uniform int repeatTextH;
+uniform int isPerVert;
 
 //const
 const float PI = 3.1415926;
 const float delta = 0.001;
+
+vec3 toSpotDirection;
 
 //functions
 vec3 doNormal(vec2 uv);
@@ -38,10 +50,12 @@ vec3 doFunctionCarpet(vec2 uv);
 vec3 doFunctionSombrero(vec2 uv);
 vec3 doFunctionVase(vec2 uv);
 vec3 doFunctionGrid(vec2 uv);
-//vec4 perVertex();
+vec4 perVertex();
+void setConstants();
 
 
 void main() {
+    setConstants();
     vec3 funcPos = doMyFunctions(inPosition);
     vec4 positionMV = mMV * vec4(funcPos, 1);
 	normal = inverse(transpose(mat3(mMV))) * doNormal(inPosition);
@@ -59,9 +73,7 @@ void main() {
 	mat3 TBN = mat3(vTangent, vBinormal, normal);
 	viewDirection = viewDirection * TBN;
 	lightDirection = lightDirection * TBN;
-	spotDirection = vec3(-3.5, 3.0, 2.0) * TBN;
-	//perVertex();
-
+	spotDirection = toSpotDirection * TBN;
 
     if(functionType == 0 || functionType == 1){
         sphereText = vec2((atan(funcPos.y, funcPos.x) / PI + 1.0)*0.5, 1.0 - acos(funcPos.z) / PI);
@@ -71,34 +83,25 @@ void main() {
         texCoord = inPosition;
     }
 
-	gl_Position = mProj * mMV * vec4(doMyFunctions(inPosition), 1);
-}/*
-vec4 perVertex(){
+    if(isPerVert == 1)
+        vertColor = perVertex();
 
+	gl_Position = mProj * mMV * vec4(doMyFunctions(inPosition), 1);
+}
+vec4 perVertex(){
+     vec4 baseColor = myColor;
      vec3 lghtDrct = normalize(lightDirection);
      vec3 nrml = normalize(normal);
      vec3 viewDrct = normalize(viewDirection);
-
-     //barva
-     vec4 baseColor = vec4(1.0, 0.2, 0.0, 1.0);
-     vec4 ambient = vec4(0.05);
-     vec4 diffuse = vec4(0.80);
-     vec4 specular = vec4(0.90);
-
-     //utlum
-     //konstatni osvetleni cim mensi tim vetsi osvetleni
-     float constantAttenuation = 0.05;
-     float linearAttenuation = 0.10; //0.05
-     float quadraticAttenuation = 0.01;
 
      //nastaveni slozek
      vec4 totalAmbient = ambient * baseColor;
      vec4 totalDifuse = vec4(0.0);
      vec4 totalSpecular = vec4(0.0);
 
-     float NdotL = dot(lghtDrct, nrml);
+     float NDotL = dot(lghtDrct, nrml);
 
-     if(NdotL > 0.0){
+     if(NDotL > 0.0){
 
         vec3 reflection = normalize(((2.0 * nrml) * NDotL) - lghtDrct);
         float RDotV = max(0.0, dot(reflection, viewDrct));
@@ -115,7 +118,25 @@ vec4 perVertex(){
      float spotEffect = dot(normalize(spotDirection), normalize(lghtDrct));
 
      return vec4(totalAmbient + att*(totalDifuse + totalSpecular));
-}*/
+}
+
+void setConstants(){
+    //barva
+     myColor = vec4(1.0, 0.2, 0.0, 1.0);
+     ambient = vec4(0.05);
+     diffuse = vec4(0.80);
+     specular = vec4(0.90);
+
+     //utlum
+     //konstatni osvetleni cim mensi tim vetsi osvetleni
+     constantAttenuation = 0.05;
+     linearAttenuation = 0.10; //0.05
+     quadraticAttenuation = 0.01;
+
+     specularPower = 6.0;
+
+     toSpotDirection = vec3(-3.5, 3.0, 2.0);
+}
 
 //normala pro stinovani barvy
 vec3 doNormal(vec2 uv){
@@ -137,7 +158,7 @@ vec3 doMyFunctions(vec2 uv){
     case 1:
         return doFunctionDonut(uv);
     case 2:
-        return doFunctionGrid(uv);
+        return doFunctionCarpet(uv);
     case 3:
         return doFunctionEle(uv);
     case 4:

@@ -43,7 +43,7 @@ public class Renderer implements GLEventListener, MouseListener,
     double camSpeed = 0.35;
     float time = 0;
     //keys
-    boolean line = false, textureSample = false, showTexture = false, normalMapping = false, myperVert = false;
+    boolean line = false, textureSample = false, showTexture = false, normalMapping = false, isPerVert = false;
 
     int repeatTextW = 1, repeatTextH = 1;
 
@@ -92,7 +92,7 @@ public class Renderer implements GLEventListener, MouseListener,
         locCamera = gl.glGetUniformLocation(shaderProgram, "camera");
         locScaleL = gl.glGetUniformLocation(shaderProgram, "scaleL");
         locScaleK = gl.glGetUniformLocation(shaderProgram, "scaleK");
-        //locPerVert = gl.glGetUniformLocation(shaderProgram, "myperVert");
+        locPerVert = gl.glGetUniformLocation(shaderProgram, "isPerVert");
 
         texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
         texture1Norm = new OGLTexture2D(gl, "/textures/bricksn.png");
@@ -146,7 +146,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform3f(locCamera,(float) camera.getPosition().getX(),(float) camera.getPosition().getY(),(float) camera.getPosition().getZ());
         gl.glUniform1f(locScaleL, scaleL);
         gl.glUniform1f(locScaleK, scaleK);
-        //gl.glUniform1i(locPerVert, Factory.convertMyBool(myperVert));
+        gl.glUniform1i(locPerVert, Factory.convertMyBool(isPerVert));
 
 
         texture1.bind(shaderProgram, "texture1", 0);
@@ -171,20 +171,18 @@ public class Renderer implements GLEventListener, MouseListener,
             textureViewer.view(texture1Para, 0.5, -0.5, 0.5);
         }
 
-
-        //vrcholy u bean, slonní hlava, normála - upraveno, proc dela bordel pri oddaleni, nefunguje reflektor
-
         //pospisky
         String text = new String(this.getClass().getName());
         textRenderer.drawStr2D(3, height - 20, text);
+        textRenderer.drawStr2D(3, height - 40, "Help -> H");
         textRenderer.drawStr2D(width - 60,  height - 20, "Text-W: " + Integer.toString(repeatTextW));
         textRenderer.drawStr2D(width - 60, height - 40, "Text-H: " + Integer.toString(repeatTextH));
         textRenderer.drawStr2D(width - 40, 3, "Michal");
+        textRenderer.drawStr2D(3, 71, "PerVertex: " + Boolean.toString(isPerVert));
         textRenderer.drawStr2D(3, 54, "Texture: " + Boolean.toString(showTexture));
         textRenderer.drawStr2D(3, 37, "Type of function: " + Integer.toString(functionType));
         textRenderer.drawStr2D(3, 20, "Type of efect: " + Integer.toString(efectType));
         textRenderer.drawStr2D(8, 3, "Degreeof type efect: " + Integer.toString(degreeOfEfect));
-        textRenderer.drawStr2D(23, 54, "PerVertex: " + Boolean.toString(myperVert));
     }
 
     @Override
@@ -329,7 +327,7 @@ public class Renderer implements GLEventListener, MouseListener,
                 textureSample = !textureSample;
                 break;
             case KeyEvent.VK_X:
-                myperVert = !myperVert;
+                isPerVert = !isPerVert;
                 break;
             case KeyEvent.VK_T:
                 showTexture = !showTexture;
@@ -379,8 +377,27 @@ public class Renderer implements GLEventListener, MouseListener,
                 System.exit(0);
                 break;
             //test
-            case KeyEvent.VK_M:
-                System.out.println(camera);
+            case KeyEvent.VK_H:
+                //System.out.println(camera);
+                Factory.mBox(" WASD + Myš + ctrl/shift + u/j = ovládání camery " + System.lineSeparator() +
+                                " Space = změna prspektivy " + System.lineSeparator() +
+                                " Q/E = změna funkce" + System.lineSeparator() +
+                                " F/G = změna efektu " + System.lineSeparator() +
+                                " -- V/B = úroveň efektu " + System.lineSeparator() +
+                                " Alt = Restart původní pozice " + System.lineSeparator() +
+                                " R = Hrany " + System.lineSeparator() +
+                                " T = Textura" + System.lineSeparator() +
+                                " -- C = zobrazení textur " + System.lineSeparator() +
+                                " -- Num0 = přepínání textury " + System.lineSeparator() +
+                                " -- Num4/Num6 a Num8/Num2 = opakování textury" + System.lineSeparator() +
+                                " -- Num5 = počet textur 1 " + System.lineSeparator() +
+                                " -- K/L = scale hloubkové textury " + System.lineSeparator() +
+                                " X = PerVertex/PerPixel" + System.lineSeparator() +
+                                " Esc = Vypnutí aplikace" + System.lineSeparator()
+                                + System.lineSeparator() +
+                                "Pro porovnání metod perPixel a perVertex prosím použijte funkci sloní hlava (Type of function : 3)",
+
+                        "Help");
                 break;
         }
     }

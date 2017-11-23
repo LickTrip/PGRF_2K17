@@ -3,6 +3,8 @@ package grid;
 import com.jogamp.opengl.GL2GL3;
 import oglutils.OGLBuffers;
 
+import javax.swing.JOptionPane;
+
 import java.util.ArrayList;
 
 public class Factory {
@@ -75,5 +77,9 @@ public class Factory {
 		if (q)
 			return 1;
 		return 0;
+	}
+
+	public static void mBox (String text, String titleBar){
+		JOptionPane.showMessageDialog(null, text, titleBar, JOptionPane.INFORMATION_MESSAGE);
 	}
 }
