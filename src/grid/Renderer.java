@@ -9,8 +9,6 @@ import transforms.*;
 
 import java.awt.event.*;
 
-import static com.jogamp.opengl.GL.GL_UNPACK_ALIGNMENT;
-
 /**
  * GLSL sample:<br/>
  * Read and compile shader from files "/shader/glsl01/start.*" using ShaderUtils
@@ -34,7 +32,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
     int shaderProgram, locProj, locMV, locFunctionType, locEfectType,
             locDegreeOfEfect, locShowTexture, locNormalMapping, locRepeatTextW, locRepeatTextH, locChangeText,
-            locCamera, locScaleL, locScaleK;
+            locCamera, locScaleL, locScaleK, locPerVert;
 
     Camera camera = new Camera();
     Mat4 mProj = new Mat4Identity();
@@ -45,7 +43,7 @@ public class Renderer implements GLEventListener, MouseListener,
     double camSpeed = 0.35;
     float time = 0;
     //keys
-    boolean line = false, textureSample = false, showTexture = false, normalMapping = false;
+    boolean line = false, textureSample = false, showTexture = false, normalMapping = false, myperVert = false;
 
     int repeatTextW = 1, repeatTextH = 1;
 
@@ -94,7 +92,7 @@ public class Renderer implements GLEventListener, MouseListener,
         locCamera = gl.glGetUniformLocation(shaderProgram, "camera");
         locScaleL = gl.glGetUniformLocation(shaderProgram, "scaleL");
         locScaleK = gl.glGetUniformLocation(shaderProgram, "scaleK");
-
+        //locPerVert = gl.glGetUniformLocation(shaderProgram, "myperVert");
 
         texture1 = new OGLTexture2D(gl, "/textures/bricks.jpg");
         texture1Norm = new OGLTexture2D(gl, "/textures/bricksn.png");
@@ -148,6 +146,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform3f(locCamera,(float) camera.getPosition().getX(),(float) camera.getPosition().getY(),(float) camera.getPosition().getZ());
         gl.glUniform1f(locScaleL, scaleL);
         gl.glUniform1f(locScaleK, scaleK);
+        //gl.glUniform1i(locPerVert, Factory.convertMyBool(myperVert));
 
 
         texture1.bind(shaderProgram, "texture1", 0);
@@ -185,6 +184,7 @@ public class Renderer implements GLEventListener, MouseListener,
         textRenderer.drawStr2D(3, 37, "Type of function: " + Integer.toString(functionType));
         textRenderer.drawStr2D(3, 20, "Type of efect: " + Integer.toString(efectType));
         textRenderer.drawStr2D(8, 3, "Degreeof type efect: " + Integer.toString(degreeOfEfect));
+        textRenderer.drawStr2D(23, 54, "PerVertex: " + Boolean.toString(myperVert));
     }
 
     @Override
@@ -327,6 +327,9 @@ public class Renderer implements GLEventListener, MouseListener,
                 break;
             case KeyEvent.VK_C:
                 textureSample = !textureSample;
+                break;
+            case KeyEvent.VK_X:
+                myperVert = !myperVert;
                 break;
             case KeyEvent.VK_T:
                 showTexture = !showTexture;

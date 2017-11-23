@@ -6,6 +6,9 @@ varying vec3 viewDirection;
 varying float dist;
 
 varying vec2 texCoord;
+varying vec3 spotDirection;
+varying vec2 sphereText;
+
 uniform vec3 camera;
 
 uniform int efectType;
@@ -18,6 +21,9 @@ uniform sampler2D texture2;
 uniform sampler2D texture2Norm;
 uniform sampler2D texture2Para;
 uniform sampler2D texture2Ao;
+
+uniform int repeatTextW;
+uniform int repeatTextH;
 
 uniform int showTexture;
 uniform int normalMap;
@@ -36,7 +42,7 @@ vec4 ambient = vec4(0.05);
 vec4 diffuse = vec4(0.80);
 vec4 specular = vec4(0.90);
 
-//cim mensi cislo tim vetsi radius
+//cim ss cislo tim vetsi radius
 float specularPower = 6.0;
 
 //utlum
@@ -47,7 +53,6 @@ float quadraticAttenuation = 0.01;
 
 //reflektor
 float spotCutOff = 0.99;
-vec3 spotDirection = vec3(-4, -9, 13.0);
 
 void main() {
 
@@ -55,26 +60,33 @@ void main() {
     vec3 lghtDrct = normalize(lightDirection);
     vec3 nrml = normalize(normal);
     vec3 viewDrct = normalize(viewDirection);
-
     vec3 bump;
     vec3 glossColor;
     float reflectivity;
 
     if(showTexture == 1){
          float heightText;
+
+         vec2 newTextCoord;
+         if(functionType == 0 || functionType == 1){
+             newTextCoord = mod(sphereText * vec2(repeatTextW, repeatTextH), vec2(1.0, 1.0));
+         }
+         else{
+              newTextCoord = mod(texCoord * vec2(repeatTextW, repeatTextH), vec2(1.0, 1.0));
+     	 }
          if(changeText == 0){
              //base
-             baseColor = texture(texture1, texCoord);
+             baseColor = texture(texture1, newTextCoord);
              //height mapp
-             heightText = texture(texture1Para, texCoord).r;
+             heightText = texture(texture1Para, newTextCoord).r;
          }
          else{
             //base
-            baseColor = texture(texture2, texCoord);
+            baseColor = texture(texture2, newTextCoord);
             //height
-            heightText = texture(texture2Para, texCoord).r;
+            heightText = texture(texture2Para, newTextCoord).r;
             //gloss
-            glossColor = texture(texture2Ao, texCoord * vec2(2.0,1.0)).rgb;
+            glossColor = texture(texture2Ao, newTextCoord * vec2(2.0,1.0)).rgb;
             reflectivity = 0.30*glossColor.r + 0.59*glossColor.g + 0.11*glossColor.b;
          }
 
@@ -84,14 +96,14 @@ void main() {
          vec2 offSet = eye.xy * v;
 
          //orezani paralax
-         if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+         if(newTextCoord.x > 1.0 || newTextCoord.y > 1.0 || newTextCoord.x < 0.0 || newTextCoord.y < 0.0)
             discard;
 
          //prepocet souradnic na <-1;1>
          if(changeText == 0)
-            bump = texture(texture1Norm, texCoord + offSet).rgb * 2.0 - 1.0;
+            bump = texture(texture1Norm, newTextCoord + offSet).rgb * 2.0 - 1.0;
          else
-            bump = texture(texture2Norm, texCoord + offSet).rgb * 2.0 - 1.0;
+            bump = texture(texture2Norm, newTextCoord + offSet).rgb * 2.0 - 1.0;
     }
 
     //nastaveni slozek
@@ -174,11 +186,11 @@ void main() {
                 //reflector
                 case 3:
                     if(spotEffect > spotCutOff){
-                        //outColor = totalAmbient + att*(totalDifuse + totalSpecular);
-                        outColor = vec4(vec3(spotEffect),1);
-                    }else
+                        outColor = totalAmbient + att*(totalDifuse + totalSpecular);
                         //outColor = vec4(vec3(spotEffect),1);
-                        outColor = totalAmbient;
+                    }else
+                        outColor = vec4(vec3(spotEffect),1);
+                        //outColor = totalAmbient;
                 break;
                 case 4:
 

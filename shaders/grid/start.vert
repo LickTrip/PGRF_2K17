@@ -10,6 +10,8 @@ varying vec3 viewDirection;
 varying float dist;
 
 varying vec2 texCoord;
+varying vec2 sphereText;
+varying vec3 spotDirection;
 
 //uniform float time; // variable constant for all vertices in a single draw
 uniform mat4 mMV;
@@ -36,6 +38,7 @@ vec3 doFunctionCarpet(vec2 uv);
 vec3 doFunctionSombrero(vec2 uv);
 vec3 doFunctionVase(vec2 uv);
 vec3 doFunctionGrid(vec2 uv);
+//vec4 perVertex();
 
 
 void main() {
@@ -56,20 +59,63 @@ void main() {
 	mat3 TBN = mat3(vTangent, vBinormal, normal);
 	viewDirection = viewDirection * TBN;
 	lightDirection = lightDirection * TBN;
+	spotDirection = vec3(-3.5, 3.0, 2.0) * TBN;
+	//perVertex();
 
-    vec2 coord;
+
     if(functionType == 0 || functionType == 1){
-        vec2 shereText = vec2((atan(funcPos.y, funcPos.x) / PI + 1.0)*0.5, 1.0 - acos(funcPos.z) / PI);
-        coord = mod(shereText * vec2(repeatTextW, repeatTextH), vec2(1.0, 1.0));
-        texCoord = coord;
+        sphereText = vec2((atan(funcPos.y, funcPos.x) / PI + 1.0)*0.5, 1.0 - acos(funcPos.z) / PI);
     }
-    else{
-         coord = mod(inPosition * vec2(repeatTextW, repeatTextH), vec2(1.0, 1.0));
-         texCoord = coord;
-	}
+    else
+    {
+        texCoord = inPosition;
+    }
 
 	gl_Position = mProj * mMV * vec4(doMyFunctions(inPosition), 1);
-}
+}/*
+vec4 perVertex(){
+
+     vec3 lghtDrct = normalize(lightDirection);
+     vec3 nrml = normalize(normal);
+     vec3 viewDrct = normalize(viewDirection);
+
+     //barva
+     vec4 baseColor = vec4(1.0, 0.2, 0.0, 1.0);
+     vec4 ambient = vec4(0.05);
+     vec4 diffuse = vec4(0.80);
+     vec4 specular = vec4(0.90);
+
+     //utlum
+     //konstatni osvetleni cim mensi tim vetsi osvetleni
+     float constantAttenuation = 0.05;
+     float linearAttenuation = 0.10; //0.05
+     float quadraticAttenuation = 0.01;
+
+     //nastaveni slozek
+     vec4 totalAmbient = ambient * baseColor;
+     vec4 totalDifuse = vec4(0.0);
+     vec4 totalSpecular = vec4(0.0);
+
+     float NdotL = dot(lghtDrct, nrml);
+
+     if(NdotL > 0.0){
+
+        vec3 reflection = normalize(((2.0 * nrml) * NDotL) - lghtDrct);
+        float RDotV = max(0.0, dot(reflection, viewDrct));
+        vec3 halfVector = normalize(lghtDrct + viewDrct);
+        float NDotH = max(0.0, dot(nrml, halfVector));
+
+        //vypocet difuzni slozky
+        totalDifuse = diffuse * NDotL * baseColor;
+        //vypocet total difuzni slozky
+        totalSpecular = specular * (pow(NDotH, specularPower*4.0));
+     }
+     //vypocet utlumu
+     float att = 1.0/(constantAttenuation + linearAttenuation * dist + quadraticAttenuation * dist * dist);
+     float spotEffect = dot(normalize(spotDirection), normalize(lghtDrct));
+
+     return vec4(totalAmbient + att*(totalDifuse + totalSpecular));
+}*/
 
 //normala pro stinovani barvy
 vec3 doNormal(vec2 uv){
