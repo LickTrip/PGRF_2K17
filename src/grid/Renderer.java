@@ -48,11 +48,11 @@ public class Renderer implements GLEventListener, MouseListener,
     int repeatTextW = 1, repeatTextH = 1;
 
     int degreeOfEfect = 0,
-            basicTypeCount = 2, lightTypeCount = 4; /*textureTypeCount = 1*/
+            basicTypeCount = 2, lightTypeCount = 4;
     ;
 
     int functionTypeCount = 6,
-            functionType = 0;
+            functionType = 2;
 
     int efectTypeCount = 1,
             efectType = efectTypeCount;
@@ -77,7 +77,7 @@ public class Renderer implements GLEventListener, MouseListener,
         //maping shaders//
         shaderProgram = ShaderUtils.loadProgram(gl, "/grid/start");
         //create buffer
-        buffers = Factory.gridGenerate(gl, 160, 160);
+        buffers = Factory.gridGenerate(gl, 120, 120);
 
         locMV = gl.glGetUniformLocation(shaderProgram, "mMV");
         locProj = gl.glGetUniformLocation(shaderProgram, "mProj");
@@ -114,9 +114,6 @@ public class Renderer implements GLEventListener, MouseListener,
     }
     //TODO blending
     private void setMyCamera() {
-//        camera = camera.withPosition(new Vec3D(5, 5, 2.5))
-//                .withAzimuth(Math.PI * 1.25)
-//                .withZenith(Math.PI * -0.125);
         camera = camera.withPosition(new Vec3D(-3.5, 3.0, 2.0))
                 .withAzimuth(-6.96)
                 .withZenith(-0.45);
@@ -163,7 +160,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
 
         // bind and draw - prvni parametr - interpretace objektu, druha - shader program
-        buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
+        buffers.draw(GL2GL3.GL_TRIANGLE_STRIP, shaderProgram);
 
         if (textureSample) {
             textureViewer.view(texture1, 0.5, 0.5, 0.5);
@@ -289,10 +286,6 @@ public class Renderer implements GLEventListener, MouseListener,
                         if (degreeOfEfect > lightTypeCount)
                             degreeOfEfect = 0;
                         break;
-                    /*case 2:
-                        if (degreeOfEfect > textureTypeCount)
-                            degreeOfEfect = 0;
-                        break;*/
                 }
                 break;
             case KeyEvent.VK_V:
@@ -306,10 +299,6 @@ public class Renderer implements GLEventListener, MouseListener,
                         if (degreeOfEfect < 0)
                             degreeOfEfect = lightTypeCount;
                         break;
-                    /*case 2:
-                        if (degreeOfEfect < 0)
-                            degreeOfEfect = textureTypeCount;
-                        break;*/
                 }
                 break;
             case KeyEvent.VK_E:

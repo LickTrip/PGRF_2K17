@@ -9,25 +9,48 @@ import java.util.ArrayList;
 
 public class Factory {
 
-	public static OGLBuffers gridGenerate(GL2GL3 gl, int rows, int columns) {
+    public static OGLBuffers gridGenerate(GL2GL3 gl, int rows, int columns) {
 
-		float[] vertexData = new float[rows * columns * 2];
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < columns; j++) {
-				// index do jednorozmerneho pole i jde p�es rows a j pres columns
-				vertexData[(i * columns + j) * 2] = j / (float) (columns - 1);
-				vertexData[(i * columns + j) * 2 + 1] = i / (float) (rows - 1);
-			}
-		}
-		System.out.println(vertexData);
+        float[] vertexData = new float[rows * columns * 2];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                // index do jednorozmerneho pole i jde p�es rows a j pres columns
+                vertexData[(i * columns + j) * 2] = j / (float) (columns - 1);
+                vertexData[(i * columns + j) * 2 + 1] = i / (float) (rows - 1);
+            }
+        }
+        System.out.println(vertexData);
 
-		OGLBuffers.Attrib[] attributes = { new OGLBuffers.Attrib("inPosition", 2) // 2 floats
-				//new OGLBuffers.Attrib("inNormal", 3) // 3 floats
-		};
+        OGLBuffers.Attrib[] attributes = {new OGLBuffers.Attrib("inPosition", 2) // 2 floats
+                //new OGLBuffers.Attrib("inNormal", 3) // 3 floats
+        };
 
-		// trojuhelniky v index bufferu - mame pocet vrcholu
-		int[] indexData = new int[(rows - 1) * (columns - 1) * 2 * 3];
-		int myIndex = 0;
+        return new OGLBuffers(gl, vertexData, attributes, getStrip(rows, columns));
+    }
+
+    private static int[] getStrip(int rows, int columns) {
+        int[] indexData = new int[2 * rows * (columns - 1) + ((rows - 2) * 2)];
+        int myIndex = 0;
+        for (int i = 0; i < rows - 1; i++) {
+            for (int j = 0; j < columns; j++) {
+                indexData[myIndex++] = j + i * columns;
+                indexData[myIndex++] = j + (i + 1) * columns;
+
+                if (j + 1 == columns) {
+                    if (i == rows - 2)
+                        break;
+                    indexData[myIndex++] = j + (i + 1) * columns;
+                    indexData[myIndex++] = (i + 1) * columns;
+                }
+            }
+        }
+        return indexData;
+    }
+
+    private static int[] getTriangles(int rows, int columns) {
+        //trojuhelniky v index bufferu - mame pocet vrcholu
+        int[] indexData = new int[(rows - 1) * (columns - 1) * 2 * 3];
+        int myIndex = 0;
 		for (int i = 0; i < rows - 1; i++) {
 			for (int j = 0; j < columns - 1; j++) {
 				indexData[myIndex] = j + i * columns;
@@ -38,30 +61,29 @@ public class Factory {
 				indexData[myIndex + 5] = (j + 1) + (i + 1) * columns;
 				myIndex += 6;
 			}
-			
+
 		}
+		return  indexData;
+    }
 
-		return new OGLBuffers(gl, vertexData, attributes, indexData);
-	}
+    public static OGLBuffers createBuffers(GL2GL3 gl) {
+        float[] vertexBufferData = {
+                -1, -1, 0.7f, 0, 0,
+                1, 0, 0, 0.7f, 0,
+                0, 1, 0, 0, 0.7f
+        };
+        int[] indexBufferData = {0, 1, 2};
 
-	public static OGLBuffers createBuffers(GL2GL3 gl) {
-		float[] vertexBufferData = {
-				-1, -1, 0.7f, 0, 0,
-				1, 0, 0, 0.7f, 0,
-				0, 1, 0, 0, 0.7f
-		};
-		int[] indexBufferData = {0, 1, 2};
-
-		// vertex binding description, concise version
-		OGLBuffers.Attrib[] attributes = {
-				new OGLBuffers.Attrib("inPosition", 2), // 2 floats
-				new OGLBuffers.Attrib("inColor", 3) // 3 floats
-				//new OGLBuffers.Attrib("inTextureCoordinates", 2)
-		};
-		return new OGLBuffers(gl, vertexBufferData, attributes,
-				indexBufferData);
-		// the concise version requires attributes to be in this order within
-		// vertex and to be exactly all floats within vertex
+        // vertex binding description, concise version
+        OGLBuffers.Attrib[] attributes = {
+                new OGLBuffers.Attrib("inPosition", 2), // 2 floats
+                new OGLBuffers.Attrib("inColor", 3) // 3 floats
+                //new OGLBuffers.Attrib("inTextureCoordinates", 2)
+        };
+        return new OGLBuffers(gl, vertexBufferData, attributes,
+                indexBufferData);
+        // the concise version requires attributes to be in this order within
+        // vertex and to be exactly all floats within vertex
 
 /*		full version for the case that some floats of the vertex are to be ignored
  * 		(in this case it is equivalent to the concise version):
@@ -71,15 +93,15 @@ public class Factory {
 		buffers = new OGLBuffers(gl, vertexBufferData, 5, // 5 floats altogether in a vertex
 				attributes, indexBufferData);
 */
-	}
+    }
 
-	public static int convertMyBool(boolean q){
-		if (q)
-			return 1;
-		return 0;
-	}
+    public static int convertMyBool(boolean q) {
+        if (q)
+            return 1;
+        return 0;
+    }
 
-	public static void mBox (String text, String titleBar){
-		JOptionPane.showMessageDialog(null, text, titleBar, JOptionPane.INFORMATION_MESSAGE);
-	}
+    public static void mBox(String text, String titleBar) {
+        JOptionPane.showMessageDialog(null, text, titleBar, JOptionPane.INFORMATION_MESSAGE);
+    }
 }

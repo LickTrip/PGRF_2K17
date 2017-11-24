@@ -178,10 +178,11 @@ vec3 doFunctionGlobe(vec2 uv){
 	float zen = uv.x * PI;
 	//od 0 do 2pi s
 	float az = uv.y * 2.0 * PI;
+	float r = sin(zen);
 
-	position.x = sin(zen) * cos(az);
-	position.y = sin(zen) * sin(az);
-	position.z = cos(zen);
+	position.x = r * sin(zen) * cos(az);
+	position.y = r * sin(zen) * sin(az);
+	position.z = r * cos(zen);
 
 	return position;
 }
