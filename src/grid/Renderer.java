@@ -1,5 +1,6 @@
 package grid;
 
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2GL3;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
@@ -10,6 +11,8 @@ import transforms.*;
 import java.awt.event.*;
 
 /**
+ * Edit by Michal Zacpal 2017
+ *
  * GLSL sample:<br/>
  * Read and compile shader from files "/shader/glsl01/start.*" using ShaderUtils
  * class in oglutils package (older GLSL syntax can be seen in
@@ -59,7 +62,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
     int changeText = 0;
 
-    float scaleL = 0.02f, scaleK = 0.01f;
+    float scaleL = 0.02f, scaleK = 0.00f;
 
     @Override
     public void init(GLAutoDrawable glDrawable) {
@@ -144,7 +147,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform1f(locScaleL, scaleL);
         gl.glUniform1f(locScaleK, scaleK);
         gl.glUniform1i(locPerVert, Factory.convertMyBool(isPerVert));
-
+        //gl.glEnable(GL2GL3.GL_BLEND);
 
         texture1.bind(shaderProgram, "texture1", 0);
         texture1Norm.bind(shaderProgram, "texture1Norm", 1);
@@ -243,7 +246,7 @@ public class Renderer implements GLEventListener, MouseListener,
             case KeyEvent.VK_ALT:
                 setMyCamera();
                 scaleL = 0.02f;
-                scaleK = 0.01f;
+                scaleK = 0.00f;
                 break;
             case KeyEvent.VK_CONTROL:
                 camera = camera.down(1);
@@ -377,14 +380,16 @@ public class Renderer implements GLEventListener, MouseListener,
                                 " R = Hrany " + System.lineSeparator() +
                                 " T = Textura" + System.lineSeparator() +
                                 " -- C = zobrazení textur " + System.lineSeparator() +
-                                " -- Num0 = přepínání textury " + System.lineSeparator() +
+                                " -- Num0 = přepínání textury (druhá textura jen pokusná - pokus o gloss efekt)" + System.lineSeparator() +
                                 " -- Num4/Num6 a Num8/Num2 = opakování textury" + System.lineSeparator() +
                                 " -- Num5 = počet textur 1 " + System.lineSeparator() +
                                 " -- K/L = scale hloubkové textury " + System.lineSeparator() +
                                 " X = PerVertex/PerPixel" + System.lineSeparator() +
                                 " Esc = Vypnutí aplikace" + System.lineSeparator()
                                 + System.lineSeparator() +
-                                "Pro porovnání metod perPixel a perVertex prosím použijte funkci sloní hlava (Type of function : 3)",
+                                "Pro porovnání metod perPixel a perVertex prosím použijte funkci sloní hlava (Type of function : 3)"
+                                + System.lineSeparator() +
+                                "Při zobrazení perVertex je k dispozici jen Phongův osvětlovací model bez textury",
 
                         "Help");
                 break;

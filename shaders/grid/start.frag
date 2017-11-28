@@ -88,14 +88,10 @@ void perPixel(){
               newTextCoord = mod(texCoord * vec2(repeatTextW, repeatTextH), vec2(1.0, 1.0));
      	 }
          if(changeText == 0){
-             //base
-             baseColor = texture(texture1, newTextCoord);
              //height mapp
              heightText = texture(texture1Para, newTextCoord).r;
          }
          else{
-            //base
-            baseColor = texture(texture2, newTextCoord);
             //height
             heightText = texture(texture2Para, newTextCoord).r;
             //gloss
@@ -113,10 +109,12 @@ void perPixel(){
             discard;
 
          //prepocet souradnic na <-1;1>
-         if(changeText == 0)
+         if(changeText == 0){
             bump = texture(texture1Norm, newTextCoord + offSet).rgb * 2.0 - 1.0;
-         else
+            baseColor = texture(texture1, newTextCoord + offSet);}
+         else{
             bump = texture(texture2Norm, newTextCoord + offSet).rgb * 2.0 - 1.0;
+            baseColor = texture(texture2, newTextCoord);}
     }
 
     //nastaveni slozek
@@ -129,10 +127,7 @@ void perPixel(){
         NDotL = dot(lghtDrct, nrml);
     }
     else{
-        if(normalMap == 1)
-            NDotL = dot(lghtDrct, nrml * bump);
-        else
-            NDotL = dot(lghtDrct, bump);
+          NDotL = dot(lghtDrct, bump);
     }
 
     if(NDotL > 0.0){
@@ -147,10 +142,7 @@ void perPixel(){
             NDotH = max(0.0, dot(nrml, halfVector));
         }
         else{
-            if(normalMap == 1)
-                NDotH = max(0.0, dot(bump * nrml, halfVector));
-            else
-                NDotH = max(0.0, dot(bump, halfVector));
+            NDotH = max(0.0, dot(bump, halfVector));
         }
 
         //vypocet difuzni slozky
@@ -202,14 +194,15 @@ void perPixel(){
                         outColor = totalAmbient + att*(totalDifuse + totalSpecular);
                         //outColor = vec4(vec3(spotEffect),1);
                     }else
-                        outColor = vec4(vec3(spotEffect),1);
+                        outColor = vec4(vec3(totalAmbient),1);
                         //outColor = totalAmbient;
                 break;
                 case 4:
-
                     if(spotEffect > spotCutOff){
+                        //TODO Blending nefunguje ???
                         float blend = clamp(((spotEffect - 1 + spotCutOff) / spotCutOff ), 0.0, 1.0);
-                        outColor = mix(totalAmbient, totalAmbient + att*(totalDifuse + totalSpecular), blend);
+                        //outColor = mix(totalAmbient, totalAmbient + att*(totalDifuse + totalSpecular), blend);
+                        outColor = vec4(vec3(blend),1);
                     }else
                         outColor = totalAmbient;
                 break;
